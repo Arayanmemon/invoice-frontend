@@ -3,10 +3,10 @@ const getApiUrl = (): string => {
   // Check if we're in the browser environment
   if (typeof window !== 'undefined') {
     // In production, use the environment variable set by Next.js
-    return 'http://localhost:8000';
+    return 'https://whnqrgiusg5oq5ynz5gjkrpzwu0kwwlz.lambda-url.eu-north-1.on.aws/';
   }
   // Server-side fallback
-  return process.env.API_BASE_URL || 'http://localhost:8000';
+  return process.env.API_BASE_URL || 'https://whnqrgiusg5oq5ynz5gjkrpzwu0kwwlz.lambda-url.eu-north-1.on.aws/';
 };
 
 const API_URL = getApiUrl();
