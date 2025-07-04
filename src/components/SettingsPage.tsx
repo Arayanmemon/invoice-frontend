@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { 
   Settings, 
   ArrowLeft, 
@@ -38,7 +38,8 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
   const [activeTab, setActiveTab] = useState('general')
   const [isLoading, setIsLoading] = useState(false)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
-  
+  const elementRef = useRef(null);
+
   // General Settings State
   const [generalSettings, setGeneralSettings] = useState({
     theme: 'light', // light, dark, system
@@ -48,6 +49,22 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
     autoSave: true,
     compactMode: false
   })
+
+  const handleFullscreenToggle = () => {
+    if (document.fullscreenElement) {
+      // If already in fullscreen, exit fullscreen
+      document.exitFullscreen();
+    } else {
+      // If not in fullscreen, request fullscreen for the element
+      if (elementRef.current.requestFullscreen) {
+        elementRef.current.requestFullscreen();
+      } else if (elementRef.current.webkitRequestFullscreen) { /* Safari */
+        elementRef.current.webkitRequestFullscreen();
+      } else if (elementRef.current.msRequestFullscreen) { /* IE11 */
+        elementRef.current.msRequestFullscreen();
+      }
+    }
+  };
 
   // Processing Settings State
   const [processingSettings, setProcessingSettings] = useState({
@@ -229,9 +246,9 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
 
   const tabs = [
     { id: 'general', name: 'General', icon: Settings },
-    { id: 'processing', name: 'Processing', icon: Cpu },
-    { id: 'security', name: 'Security', icon: Shield },
-    { id: 'storage', name: 'Storage', icon: HardDrive }
+    // { id: 'processing', name: 'Processing', icon: Cpu },
+    // { id: 'security', name: 'Security', icon: Shield },
+    // { id: 'storage', name: 'Storage', icon: HardDrive }
   ]
 
   if (isInitialLoad) {
@@ -247,7 +264,7 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-pink-50">
+    <div ref={elementRef} className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-pink-50">
       {/* Header */}
       <header className="bg-white/95 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -329,7 +346,7 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
                       <div className="space-y-2">
                         {[
                           { value: 'light', label: 'Light', icon: Sun },
-                          { value: 'dark', label: 'Dark', icon: Moon },
+                          // { value: 'dark', label: 'Dark', icon: Moon },
                           { value: 'system', label: 'System', icon: Monitor }
                         ].map(({ value, label, icon: Icon }) => (
                           <label key={value} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
@@ -357,10 +374,10 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="en">English</option>
-                        <option value="es">Español</option>
+                        {/* <option value="es">Español</option>
                         <option value="fr">Français</option>
                         <option value="de">Deutsch</option>
-                        <option value="it">Italiano</option>
+                        <option value="it">Italiano</option> */}
                       </select>
                     </div>
 
@@ -373,10 +390,10 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="UTC">UTC</option>
-                        <option value="EST">Eastern Time</option>
+                        {/* <option value="EST">Eastern Time</option>
                         <option value="PST">Pacific Time</option>
                         <option value="GMT">Greenwich Mean Time</option>
-                        <option value="CET">Central European Time</option>
+                        <option value="CET">Central European Time</option> */}
                       </select>
                     </div>
 
@@ -398,7 +415,7 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
                             <input
                               type="checkbox"
                               checked={generalSettings[key as keyof typeof generalSettings] as boolean}
-                              onChange={(e) => setGeneralSettings({ ...generalSettings, [key]: e.target.checked })}
+                              onChange={(e) => { setGeneralSettings({ ...generalSettings, [key]: e.target.checked }); key==='compactMode' ? handleFullscreenToggle() : null; }}
                               className="sr-only peer"
                             />
                             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -412,7 +429,7 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
             )}
 
             {/* Processing Settings */}
-            {activeTab === 'processing' && (
+            {/* {activeTab === 'processing' && (
               <div className="space-y-6">
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 hover:shadow-xl transition-all duration-300">
                   <div className="flex items-center justify-between mb-6">
@@ -500,10 +517,10 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
 
             {/* Security Settings */}
-            {activeTab === 'security' && (
+            {/* {activeTab === 'security' && (
               <div className="space-y-6">
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 hover:shadow-xl transition-all duration-300">
                   <div className="flex items-center justify-between mb-6">
@@ -588,10 +605,10 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
 
             {/* Storage Settings */}
-            {activeTab === 'storage' && (
+            {/* {activeTab === 'storage' && (
               <div className="space-y-6">
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 hover:shadow-xl transition-all duration-300">
                   <div className="flex items-center justify-between mb-6">
@@ -609,7 +626,6 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
                   </div>
 
                   <div className="space-y-6">
-                    {/* Storage Overview */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg">
                         <div className="flex items-center space-x-3">
@@ -695,7 +711,6 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
                       ))}
                     </div>
 
-                    {/* Storage Actions */}
                     <div className="border-t border-gray-200 pt-6">
                       <h4 className="text-lg font-semibold text-gray-900 mb-4">Storage Actions</h4>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -716,7 +731,7 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
           </div>
         </div>
       </main>

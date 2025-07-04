@@ -23,10 +23,10 @@
 }
 body {
   background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-  color: white;
+  color: black;
   font-family: 'Inter', sans-serif;
 }
-@layer components {
+@layer components { 
   .dropzone {
     @apply border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors;
   }

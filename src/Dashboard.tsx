@@ -191,13 +191,13 @@ export default function Dashboard({ onLogout }: DashboardProps) {
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
             Welcome back! 👋
           </h2>
-          <p className="text-gray-600">
+          {/* <p className="text-gray-600">
             Here's what's happening with your invoice validation today.
-          </p>
+          </p> */}
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
             <div key={index} className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
               <div className="flex items-center justify-between mb-4">
@@ -221,7 +221,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
               <div className="text-sm text-gray-600">{stat.label}</div>
             </div>
           ))}
-        </div>
+        </div> */}
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -250,7 +250,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         </div>
 
         {/* Recent Activity */}
-        <div className="mt-8 bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+        {/* <div className="mt-8 bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
           <div className="flex items-center space-x-3 mb-6">
             <div className="bg-gradient-to-br from-purple-100 to-indigo-100 p-3 rounded-xl">
               <Clock className="w-6 h-6 text-purple-600" />
@@ -288,7 +288,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
       </main>
 
       {/* Footer */}
@@ -310,7 +310,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             </div>
           </div>
           <div className="mt-4 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
-            © 2024 Smart Invoice Validator. All rights reserved.
+            © 2025 Smart Invoice Validator. All rights reserved.
           </div>
         </div>
       </footer>

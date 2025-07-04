@@ -204,7 +204,7 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
               </div>
 
               <div className="mt-8 space-y-4">
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4">
+                {/* <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4">
                   <div className="flex items-center space-x-3">
                     <div className="bg-blue-100 p-2 rounded-lg">
                       <Shield className="w-5 h-5 text-blue-600" />
@@ -214,7 +214,7 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
                       <p className="text-sm text-gray-600">Two-factor authentication enabled</p>
                     </div>
                   </div>
-                </div>
+                </div> */}
 
                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4">
                   <div className="flex items-center space-x-3">
@@ -428,13 +428,13 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
               <h3 className="text-xl font-bold text-gray-900 mb-6">Data & Privacy</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button
+                {/* <button
                   onClick={handleExportData}
                   className="flex items-center justify-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <Download className="w-5 h-5" />
                   <span>Export My Data</span>
-                </button>
+                </button> */}
                 
                 <button
                   onClick={handleDeleteAccount}
