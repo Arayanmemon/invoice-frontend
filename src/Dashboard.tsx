@@ -124,13 +124,13 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                 <User className="w-5 h-5" />
                 <span>Profile</span>
               </button>
-              <button 
+              {/* <button 
                 onClick={() => setCurrentView('settings')}
                 className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
               >
                 <Settings className="w-5 h-5" />
                 <span>Settings</span>
-              </button>
+              </button> */}
               <button 
                 onClick={onLogout}
                 className="flex items-center space-x-2 text-gray-700 hover:text-red-600 transition-colors"
