@@ -20,6 +20,7 @@ export default function HomePage() {
   const { isAuthenticated, isLoading } = useAuth();
   const [currentView, setCurrentView] = useState<'landing' | 'login'>('landing');
   const [oauthError, setOauthError] = useState<string | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const router = useRouter();
 
   // Check for OAuth errors in URL
@@ -37,11 +38,12 @@ export default function HomePage() {
 
   // Handle authentication state changes
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !isLoading && !isRedirecting) {
       // User is authenticated, redirect to dashboard
-      router.push('/dashboard');
+      setIsRedirecting(true);
+      router.replace('/dashboard');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isLoading, isRedirecting, router]);
 
   // If loading, show loading screen
   if (isLoading) {
@@ -57,7 +59,7 @@ export default function HomePage() {
   }
 
   // If authenticated, will redirect via useEffect above
-  if (isAuthenticated) {
+  if (isAuthenticated || isRedirecting) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
@@ -74,10 +76,6 @@ export default function HomePage() {
     return (
       <AuthenticatedLoginPage
         onBack={() => setCurrentView('landing')}
-        onSuccess={() => {
-          // The AuthContext will handle the state change
-          // No need to manually set view since useEffect will handle it
-        }}
       />
     );
   }

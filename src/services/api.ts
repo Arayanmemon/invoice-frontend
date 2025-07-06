@@ -9,6 +9,16 @@ const getApiUrl = (): string => {
   return process.env.API_BASE_URL || 'https://whnqrgiusg5oq5ynz5gjkrpzwu0kwwlz.lambda-url.eu-north-1.on.aws';
 };
 
+// const getApiUrl = (): string => {
+//   // Check if we're in the browser environment
+//   if (typeof window !== 'undefined') {
+//     // For development/testing, use local backend
+//     return 'http://localhost:8000';
+//   }
+//   // Server-side fallback to local backend for testing
+//   return process.env.API_BASE_URL || 'http://localhost:8000';
+// };
+
 const API_URL = getApiUrl();
 const API_V1 = '/api/v1';
 

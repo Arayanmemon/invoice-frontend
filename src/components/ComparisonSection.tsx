@@ -148,21 +148,24 @@ export function ComparisonSection({ allInvoices = [], contracts, onContractsChan
           (iItem: InvoiceItem) => normalize(iItem.description) === contractItemName
         );
 
-              let invoicePrice = 0;
+        // Get contract price - use unit_price if available and > 0, otherwise use total
+        const contractPrice = (cItem.unit_price && cItem.unit_price > 0) ? cItem.unit_price : (cItem.total || 0);
+
+        let invoicePrice = 0;
         let itemMatch = false;
         let note: string | undefined;
 
         if (matchingInvoiceItem) {
           invoicePrice = matchingInvoiceItem.unit_price || matchingInvoiceItem.total || 0;
-          // Compare unit prices with a small tolerance for floating point issues
-          itemMatch = Math.abs(cItem.unit_price - invoicePrice) < 0.01;
+          // Compare prices with a small tolerance for floating point issues
+          itemMatch = Math.abs(contractPrice - invoicePrice) < 0.01;
           if (!itemMatch) {
             pricesMatchOverall = false;
-            note = `Price mismatch: Contract €${cItem.unit_price.toFixed(2)}, Invoice €${invoicePrice.toFixed(2)}`;
+            note = `Price mismatch: Contract €${contractPrice.toFixed(2)}, Invoice €${invoicePrice.toFixed(2)}`;
             issues.push({
               type: 'price_mismatch',
               service_name: cItem.description,
-              contract_value: cItem.unit_price,
+              contract_value: contractPrice,
               invoice_value: invoicePrice,
             });
           }
@@ -173,14 +176,14 @@ export function ComparisonSection({ allInvoices = [], contracts, onContractsChan
           issues.push({
             type: 'service_not_in_invoice', // Custom type
             service_name: cItem.description,
-            contract_value: cItem.unit_price,
+            contract_value: contractPrice,
             invoice_value: 'N/A',
           });
         }
         
         priceComparisonDetails.push({
           service_name: cItem.description,
-          contract_price: cItem.unit_price,
+          contract_price: contractPrice,
           invoice_price: invoicePrice,
           match: itemMatch,
           note: note,

@@ -106,7 +106,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.removeItem('refresh_token');
       setUser(null);
       setIsLoading(false);
-      router.push('/');
+      // Use window.location for navigation to avoid router issues
+      window.location.href = '/';
     }
   };
 
