@@ -16,7 +16,7 @@ import {
 
 interface AuthenticatedLoginPageProps {
   onBack?: () => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }
 
 export function AuthenticatedLoginPage({ onBack, onSuccess }: AuthenticatedLoginPageProps) {
@@ -84,7 +84,7 @@ export function AuthenticatedLoginPage({ onBack, onSuccess }: AuthenticatedLogin
         await login(formData.email, formData.password);
         toast.success('Welcome back!');
       }
-      onSuccess();
+      onSuccess?.();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
       toast.error(errorMessage);

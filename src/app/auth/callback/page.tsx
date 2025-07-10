@@ -29,7 +29,7 @@ function AuthCallbackContent() {
 
         await handleOAuthCallback(accessToken, refreshToken);
         toast.success('Successfully authenticated!');
-        router.push('/');
+        router.replace('/dashboard');
       } catch (error) {
         console.error('OAuth callback error:', error);
         toast.error(error instanceof Error ? error.message : 'Authentication failed');
