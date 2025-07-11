@@ -789,6 +789,4 @@ export function ComparisonSection({ allInvoices = [], contracts, onContractsChan
   )}
 </div>
   )
- 
-
 } 

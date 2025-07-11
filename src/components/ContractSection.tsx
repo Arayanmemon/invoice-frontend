@@ -45,9 +45,32 @@ export function ContractSection({ onContractCreated }: ContractSectionProps) {
   const handleUpload = async (file: File) => {
     setIsLoading(true)
     setIsUploading(true)
+    
     try {
+      // Validate file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        throw new Error('File size must be less than 10MB');
+      }
+      
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error('Only PDF, JPEG, and PNG files are supported');
+      }
+      
+      console.log('Uploading contract file:', {
+        name: file.name,
+        type: file.type,
+        size: file.size
+      });
+      
       const formData = new FormData()
       formData.append('file', file)
+      
+      // Add additional metadata that might be required by the backend
+      formData.append('file_type', file.type);
+      formData.append('file_name', file.name);
       
       const data = await api.contracts.upload(formData)
       setContracts((prevContracts) => [...prevContracts, data])
@@ -60,8 +83,9 @@ export function ContractSection({ onContractCreated }: ContractSectionProps) {
         onContractCreated()
       }
     } catch (error) {
-      toast.error('Failed to upload contract')
-      console.error('Error uploading contract:', error)
+      console.error('Error uploading contract:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload contract';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false)
       setIsUploading(false)

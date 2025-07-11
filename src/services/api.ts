@@ -1,5 +1,8 @@
 // API URL handling - environment-based configuration
+import { clearSessionData, validateSession } from '@/utils/sessionUtils';
+
 const getApiUrl = (): string => {
+  debugger;
   // Check if we're in the browser environment
   if (typeof window !== 'undefined') {
     // In production, use the environment variable set by Next.js
@@ -126,6 +129,12 @@ export interface ComparisonResult {
 
 // Authentication helper functions
 const getAuthHeaders = (): HeadersInit => {
+  // Validate session before returning headers
+  if (!validateSession()) {
+    console.log('Session invalid, clearing and redirecting to login');
+    return {};
+  }
+  
   const token = localStorage.getItem('access_token');
   return token ? { 'Authorization': `Bearer ${token}` } : {};
 };
@@ -145,9 +154,9 @@ const handleResponse = async (response: Response) => {
     
     // Handle authentication errors
     if (response.status === 401) {
-      // Token expired or invalid, redirect to login
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
+      // Token expired or invalid, clear all application data and redirect to login
+      console.log('401 error received, clearing session and redirecting');
+      clearSessionData();
       window.location.href = '/';
     }
     
@@ -159,9 +168,52 @@ const handleResponse = async (response: Response) => {
 // Debug function
 const debugFetch = async (url: string, options?: RequestInit) => {
   console.log(`Fetching ${url}`, options);
+  
+  // Ensure CORS headers for production
+  const defaultOptions: RequestInit = {
+    mode: 'cors',
+    credentials: 'omit',
+    ...options,
+  };
+  
+  // Add additional headers for production compatibility
+  if (options?.headers) {
+    defaultOptions.headers = {
+      ...options.headers,
+      'Accept': 'application/json',
+    };
+  }
+  
   try {
-    const response = await fetch(url, options);
-    console.log(`Response for ${url}:`, response.status);
+    const response = await fetch(url, defaultOptions);
+    console.log(`Response for ${url}:`, response.status, response.statusText);
+    
+    if (!response.ok) {
+      const contentType = response.headers.get('content-type');
+      let errorMessage = `HTTP ${response.status} - ${response.statusText}`;
+      
+      if (contentType?.includes('application/json')) {
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.detail || errorMessage;
+        } catch (e) {
+          console.warn('Could not parse error response as JSON');
+        }
+      } else {
+        try {
+          const errorText = await response.text();
+          if (errorText) {
+            errorMessage = errorText;
+          }
+        } catch (e) {
+          console.warn('Could not read error response text');
+        }
+      }
+      
+      console.error(`Fetch error for ${url}:`, errorMessage);
+      throw new Error(errorMessage);
+    }
+    
     return response;
   } catch (error) {
     console.error(`Fetch error for ${url}:`, error);
@@ -215,14 +267,46 @@ export const api = {
     
     upload: async (formData: FormData): Promise<Contract> => {
       try {
+        // Log the formData contents for debugging
+        console.log('Uploading contract with formData');
+        for (const [key, value] of formData.entries()) {
+          console.log(`FormData entry: ${key}`, value instanceof File ? `File: ${value.name}, size: ${value.size}, type: ${value.type}` : value);
+        }
+        
+        // Get auth headers but don't set Content-Type for FormData (let browser set it with boundary)
+        const authHeaders = getAuthHeaders();
+        
         const response = await debugFetch(`${API_URL}${API_V1}/contracts/upload`, {
           method: 'POST',
-          headers: getAuthHeaders(),
+          headers: authHeaders, // Don't add Content-Type for FormData
           body: formData,
         });
-        return handleResponse(response);
+        
+        if (!response.ok) {
+          const contentType = response.headers.get('content-type');
+          let errorText = `HTTP ${response.status} - ${response.statusText}`;
+          
+          try {
+            if (contentType?.includes('application/json')) {
+              const errorData = await response.json();
+              errorText = errorData.detail || errorData.message || errorText;
+            } else {
+              errorText = await response.text() || errorText;
+            }
+          } catch (e) {
+            console.warn('Could not parse error response');
+          }
+          
+          console.error('Upload error response:', errorText);
+          throw new Error(`Upload failed: ${errorText}`);
+        }
+        
+        return await response.json();
       } catch (error) {
         console.error('Error in upload:', error);
+        if (error instanceof Error) {
+          throw new Error(`Failed to upload contract: ${error.message}`);
+        }
         throw new Error('Failed to upload contract');
       }
     },
@@ -253,6 +337,23 @@ export const api = {
       } catch (error) {
         console.error('Error in update:', error);
         throw new Error('Failed to update contract');
+      }
+    },
+    
+    clearAll: async (): Promise<void> => {
+      try {
+        console.log('Calling contracts clear-all endpoint...');
+        const url = `${API_URL}${API_V1}/contracts/clear-all`;
+        console.log('Clear contracts URL:', url);
+        
+        const response = await debugFetch(url, {
+          method: 'DELETE',
+          headers: getAuthenticatedHeaders(),
+        });
+        return handleResponse(response);
+      } catch (error) {
+        console.error('Error in clearAll contracts:', error);
+        throw new Error('Failed to clear all contracts');
       }
     }
   },
@@ -350,6 +451,23 @@ export const api = {
       } catch (error) {
         console.error('Error in deleteById invoice:', error);
         throw new Error('Failed to delete invoice');
+      }
+    },
+    
+    clearAll: async (): Promise<void> => {
+      try {
+        console.log('Calling invoices clear-all endpoint...');
+        const url = `${API_URL}${API_V1}/invoices/clear-all`;
+        console.log('Clear invoices URL:', url);
+        
+        const response = await debugFetch(url, {
+          method: 'DELETE',
+          headers: getAuthenticatedHeaders(),
+        });
+        return handleResponse(response);
+      } catch (error) {
+        console.error('Error in clearAll invoices:', error);
+        throw new Error('Failed to clear all invoices');
       }
     }
   }
