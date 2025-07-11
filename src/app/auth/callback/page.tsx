@@ -10,9 +10,15 @@ function AuthCallbackContent() {
   const searchParams = useSearchParams();
   const { handleOAuthCallback } = useAuth();
   const [isProcessing, setIsProcessing] = useState(true);
+  const [hasProcessed, setHasProcessed] = useState(false);
 
   useEffect(() => {
     const processCallback = async () => {
+      // Prevent multiple executions
+      if (hasProcessed) {
+        return;
+      }
+      
       try {
         const accessToken = searchParams.get('access_token');
         const refreshToken = searchParams.get('refresh_token');
@@ -28,8 +34,18 @@ function AuthCallbackContent() {
         }
 
         await handleOAuthCallback(accessToken, refreshToken);
+        
+        // Mark as processed to prevent duplicate notifications
+        setHasProcessed(true);
+        
+        // Show success message only once
         toast.success('Successfully authenticated!');
-        router.replace('/dashboard');
+        
+        // Add a small delay to ensure the toast is visible before navigation
+        setTimeout(() => {
+          router.replace('/dashboard');
+        }, 1000);
+        
       } catch (error) {
         console.error('OAuth callback error:', error);
         toast.error(error instanceof Error ? error.message : 'Authentication failed');
@@ -40,7 +56,7 @@ function AuthCallbackContent() {
     };
 
     processCallback();
-  }, [searchParams, handleOAuthCallback, router]);
+  }, [searchParams, handleOAuthCallback, router, hasProcessed]);
 
   if (isProcessing) {
     return (

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
 import { 
   FileText, 
   Upload, 
@@ -45,6 +46,8 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [allInvoices, setAllInvoices] = useState<any[]>([])
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [currentView, setCurrentView] = useState<'dashboard' | 'profile' | 'settings'>('dashboard')
+  
+  const { isAuthenticated, user } = useAuth()
 
   const fetchContracts = useCallback(async () => {
     try {
@@ -64,10 +67,21 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     }
   }, [])
 
+  // Clear dashboard data when user changes or becomes unauthenticated
   useEffect(() => {
-    fetchContracts()
-    fetchInvoices()
-  }, [fetchContracts, fetchInvoices])
+    if (!isAuthenticated || !user) {
+      console.log('User authentication changed, clearing dashboard data');
+      setCurrentInvoiceData(null);
+      setContracts([]);
+      setAllInvoices([]);
+      setCurrentView('dashboard');
+    } else {
+      // User is authenticated, fetch fresh data
+      console.log('User authenticated, fetching fresh data');
+      fetchContracts();
+      fetchInvoices();
+    }
+  }, [isAuthenticated, user, fetchContracts, fetchInvoices])
 
   const handleInvoiceProcessed = async (invoiceData: any) => {
     setCurrentInvoiceData(invoiceData)

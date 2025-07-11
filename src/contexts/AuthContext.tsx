@@ -2,7 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { authAPI } from '@/services/api';
+import { authAPI, api } from '@/services/api';
+import { clearSessionData, validateSession } from '@/utils/sessionUtils';
 
 export interface User {
   id: string;
@@ -42,8 +43,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
   }, []);
 
+  const clearApplicationData = () => {
+    clearSessionData();
+  };
+
+  const clearUserBackendData = async () => {
+    try {
+      // Clear all contracts and invoices from backend to ensure fresh start
+      console.log('Clearing user data from backend for fresh session...');
+      
+      // Call each endpoint separately to identify which one is failing
+      try {
+        console.log('Clearing contracts...');
+        await api.contracts.clearAll();
+        console.log('Contracts cleared successfully');
+      } catch (contractError) {
+        console.error('Error clearing contracts:', contractError);
+      }
+      
+      try {
+        console.log('Clearing invoices...');
+        await api.invoices.clearAll();
+        console.log('Invoices cleared successfully');
+      } catch (invoiceError) {
+        console.error('Error clearing invoices:', invoiceError);
+      }
+      
+      console.log('Backend user data clearing completed');
+    } catch (error) {
+      console.error('Error clearing backend user data:', error);
+      // Don't throw error here as login should still proceed
+    }
+  };
+
   const initializeAuth = async () => {
     try {
+      // Validate session before attempting to get user data
+      if (!validateSession()) {
+        console.log('Session validation failed, clearing auth state');
+        setIsLoading(false);
+        return;
+      }
+      
       const accessToken = localStorage.getItem('access_token');
       if (accessToken) {
         // Verify token and get user info
@@ -51,9 +92,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(userData);
       }
     } catch (error) {
-      // Token is invalid, clear it
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
+      // Token is invalid, clear it and application data
+      console.log('Authentication initialization failed, clearing session');
+      clearApplicationData();
     } finally {
       setIsLoading(false);
     }
@@ -62,11 +103,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string): Promise<void> => {
     try {
       setIsLoading(true);
+      // Clear any existing application data before login
+      clearApplicationData();
+      
       const response = await authAPI.login(email, password);
       
       // Store tokens
       localStorage.setItem('access_token', response.access_token);
       localStorage.setItem('refresh_token', response.refresh_token);
+      
+      // Clear backend data for fresh session before setting user
+      await clearUserBackendData();
       
       setUser(response.user);
     } catch (error) {
@@ -79,11 +126,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (email: string, name: string, password: string): Promise<void> => {
     try {
       setIsLoading(true);
+      // Clear any existing application data before registration
+      clearApplicationData();
+      
       const response = await authAPI.register(email, name, password);
       
       // Store tokens
       localStorage.setItem('access_token', response.access_token);
       localStorage.setItem('refresh_token', response.refresh_token);
+      
+      // Clear backend data for fresh session before setting user
+      await clearUserBackendData();
       
       setUser(response.user);
     } catch (error) {
@@ -101,9 +154,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Even if logout fails on server, clear local state
       console.error('Logout error:', error);
     } finally {
-      // Clear local state
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
+      // Clear local state and application data
+      clearApplicationData();
       setUser(null);
       setIsLoading(false);
       // Use window.location for navigation to avoid router issues
@@ -131,12 +183,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       
+      // Clear any existing application data before OAuth login
+      clearApplicationData();
+      
       // Store tokens
       localStorage.setItem('access_token', accessToken);
       localStorage.setItem('refresh_token', refreshToken);
       
       // Get user info
       const userData = await authAPI.getCurrentUser();
+      
+      // Clear backend data for fresh session before setting user
+      await clearUserBackendData();
+      
       setUser(userData);
       
       // Don't redirect here - let the main page handle it based on authentication state
