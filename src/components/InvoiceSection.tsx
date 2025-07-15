@@ -52,6 +52,25 @@ const InvoiceSection: React.FC<InvoiceSectionProps> = ({ onInvoiceProcessed, onR
   const processInvoice = async (file: File) => {
     setIsLoading(true)
     try {
+      // Validate file size (max 500KB for invoice validation projects)
+      const maxSize = 500 * 1024; // 500KB
+      if (file.size > maxSize) {
+        throw new Error('File size must be less than 500KB. Please compress your PDF or use a smaller file.');
+      }
+      
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error('Only PDF, JPEG, and PNG files are supported');
+      }
+      
+      console.log('Processing invoice file:', {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        sizeKB: Math.round(file.size / 1024)
+      });
+      
       const invoiceData = await api.invoices.processInvoice(file)
       setProcessedInvoice(invoiceData)
       
@@ -62,7 +81,11 @@ const InvoiceSection: React.FC<InvoiceSectionProps> = ({ onInvoiceProcessed, onR
       
       toast.success('Invoice processed successfully')
     } catch (error) {
-      toast.error('Failed to process invoice')
+      if (error instanceof Error) {
+        toast.error(error.message)
+      } else {
+        toast.error('Failed to process invoice')
+      }
       console.error('Error processing invoice:', error)
     } finally {
       setIsLoading(false)
@@ -94,8 +117,22 @@ const InvoiceSection: React.FC<InvoiceSectionProps> = ({ onInvoiceProcessed, onR
       'image/png': ['.png']
     },
     maxFiles: 1,
+    maxSize: 500 * 1024, // 500KB limit
     multiple: false,
-    disabled: isLoading
+    disabled: isLoading,
+    onDropRejected: (fileRejections) => {
+      fileRejections.forEach((file) => {
+        file.errors.forEach((error) => {
+          if (error.code === 'file-too-large') {
+            toast.error('File size must be less than 500KB. Please compress your PDF or use a smaller file.');
+          } else if (error.code === 'file-invalid-type') {
+            toast.error('Only PDF, JPEG, and PNG files are supported');
+          } else {
+            toast.error(`File upload error: ${error.message}`);
+          }
+        });
+      });
+    }
   }
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone(dropzoneOptions)
@@ -244,7 +281,7 @@ const InvoiceSection: React.FC<InvoiceSectionProps> = ({ onInvoiceProcessed, onR
           ? 'Processing...'
           : 'Upload Invoice'}
       </p>
-      <p className="text-sm text-gray-500">PDF, JPG, PNG supported</p>
+      <p className="text-sm text-gray-500">PDF, JPG, PNG supported (max 500KB)</p>
     </div>
 
     {processedInvoice && (
