@@ -47,10 +47,10 @@ export function ContractSection({ onContractCreated }: ContractSectionProps) {
     setIsUploading(true)
     
     try {
-      // Validate file size (max 10MB)
-      const maxSize = 10 * 1024 * 1024; // 10MB
+      // Validate file size (max 500KB for invoice validation projects)
+      const maxSize = 500 * 1024; // 500KB
       if (file.size > maxSize) {
-        throw new Error('File size must be less than 10MB');
+        throw new Error('File size must be less than 500KB. Please compress your PDF or use a smaller file.');
       }
       
       // Validate file type
@@ -62,7 +62,8 @@ export function ContractSection({ onContractCreated }: ContractSectionProps) {
       console.log('Uploading contract file:', {
         name: file.name,
         type: file.type,
-        size: file.size
+        size: file.size,
+        sizeKB: Math.round(file.size / 1024)
       });
       
       const formData = new FormData()
@@ -107,8 +108,22 @@ export function ContractSection({ onContractCreated }: ContractSectionProps) {
       'image/png': ['.png']
     },
     maxFiles: 1,
+    maxSize: 500 * 1024, // 500KB limit
     multiple: false,
-    disabled: isLoading || isUploading
+    disabled: isLoading || isUploading,
+    onDropRejected: (fileRejections) => {
+      fileRejections.forEach((file) => {
+        file.errors.forEach((error) => {
+          if (error.code === 'file-too-large') {
+            toast.error('File size must be less than 500KB. Please compress your PDF or use a smaller file.');
+          } else if (error.code === 'file-invalid-type') {
+            toast.error('Only PDF, JPEG, and PNG files are supported');
+          } else {
+            toast.error(`File upload error: ${error.message}`);
+          }
+        });
+      });
+    }
   })
 
   const addItem = () => {
@@ -498,7 +513,7 @@ export function ContractSection({ onContractCreated }: ContractSectionProps) {
               : 'Drag & drop a contract file, or click to select'}
           </p>
           <p className="text-sm text-gray-500 mt-2">
-            Supported formats: PDF, JPEG, PNG
+            Supported formats: PDF, JPEG, PNG (max 500KB)
           </p>
         </div>
       ) : (

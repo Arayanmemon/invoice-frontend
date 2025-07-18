@@ -64,3 +64,28 @@ export const validateSession = (): boolean => {
   
   return true;
 };
+
+// File validation utilities
+export const MAX_FILE_SIZE = 500 * 1024; // 500KB
+
+export const validateFileSize = (file: File, maxSize: number = MAX_FILE_SIZE): boolean => {
+  return file.size <= maxSize;
+};
+
+export const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+export const validateFileType = (file: File, allowedTypes: string[]): boolean => {
+  return allowedTypes.includes(file.type);
+};
+
+export const getFileSizeErrorMessage = (maxSizeKB: number = 500): string => {
+  return `File size must be less than ${maxSizeKB}KB. Please compress your PDF or use a smaller file.`;
+};
