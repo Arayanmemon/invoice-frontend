@@ -326,42 +326,7 @@ const InvoiceSection: React.FC<InvoiceSectionProps> = ({ onInvoiceProcessed, onR
       </div>
     )}
 
-    {invoices.length > 0 && !processedInvoice && (
-      <div className="mt-8">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">
-          Saved Invoices
-        </h3>
-        <div className="space-y-4">
-          {invoices.map((invoice) => (
-            <div
-              key={invoice.id}
-              className="border border-pink-100 bg-white rounded-md p-4 flex justify-between items-center shadow-sm"
-            >
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">
-                  {invoice.supplier_name} - ID: {invoice.id}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Processed: {new Date(invoice.created_at).toLocaleDateString()}
-                </p>
-              </div>
-              <button
-                onClick={() => handleDeleteInvoice(invoice.id)}
-                disabled={isDeleting === invoice.id || isLoading}
-                className="p-2 text-red-500 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Delete this invoice"
-              >
-                {isDeleting === invoice.id ? (
-                  <span className="text-sm italic">Deleting...</span>
-                ) : (
-                  <Trash2 size={18} />
-                )}
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
+    {/* Previous invoices section has been hidden per user request */}
   </div>
 </div>
   )
