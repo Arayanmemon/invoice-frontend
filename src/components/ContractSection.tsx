@@ -611,65 +611,59 @@ export function ContractSection({ onContractCreated }: ContractSectionProps) {
         </form>
       )}
 
+      {/* Show details of the most recently created/uploaded contract */}
       {contracts.length > 0 && (
         <div className="mt-8">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Your Contracts</h3>
-          <div className="space-y-4">
-            {contracts.map((contract) => (
-              <div
-                key={contract.id}
-                className="border border-gray-200 rounded-md p-4"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h4 className="font-medium text-gray-900">
-                      {contract.supplier_name}
-                    </h4>
-                    <p className="text-sm text-gray-500">
-                      Created: {new Date(contract.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleEdit(contract)}
-                      className="text-gray-400 hover:text-indigo-600"
-                      title="Edit contract"
-                    >
-                      <Edit2 className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(contract.id)}
-                      className="text-gray-400 hover:text-red-600"
-                      title="Delete contract"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  {contract.items && contract.items.map((item, idx) => (
-                    <div key={idx} className="grid grid-cols-12 gap-x-4 text-sm">
-                      <span className="col-span-6 text-gray-700 truncate" title={item.description}>
-                        {item.description}
-                      </span>
-                      <span className="sm:col-span-2 text-gray-600 text-right sm:text-left">
-                        Qty: {item.quantity?.toFixed(2) || 'N/A'}
-                      </span>
-                      <span className={`sm:col-span-2 text-gray-800 text-right sm:text-left ${item.unit_price < 0 ? 'text-red-600' : ''}`}>
-                        @ ${item.unit_price !== undefined ? Math.abs(item.unit_price).toFixed(2) : 'N/A'}
-                      </span>
-                      <span className={`sm:col-span-3 text-gray-900 font-medium text-right ${item.total && item.total < 0 ? 'text-red-600' : ''}`}>
-                        Total: ${item.total !== undefined ? Math.abs(item.total).toFixed(2) : (item.quantity * item.unit_price) ? (item.quantity * item.unit_price).toFixed(2) : 'N/A'}
-                        {item.total && item.total < 0 ? ' (neg)' : ''}
-                      </span>
-                    </div>
-                  ))}
-                  {(!contract.items || contract.items.length === 0) && (
-                    <p className="text-sm text-gray-500">No items listed for this contract.</p>
-                  )}
-                </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Current Contract</h3>
+          <div className="border border-gray-200 rounded-md p-4">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h4 className="font-medium text-gray-900">
+                  {contracts[contracts.length - 1].supplier_name}
+                </h4>
+                <p className="text-sm text-gray-500">
+                  Created: {new Date(contracts[contracts.length - 1].created_at).toLocaleDateString()}
+                </p>
               </div>
-            ))}
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleEdit(contracts[contracts.length - 1])}
+                  className="text-gray-400 hover:text-indigo-600"
+                  title="Edit contract"
+                >
+                  <Edit2 className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => handleDelete(contracts[contracts.length - 1].id)}
+                  className="text-gray-400 hover:text-red-600"
+                  title="Delete contract"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {contracts[contracts.length - 1].items && contracts[contracts.length - 1].items.map((item, idx) => (
+                <div key={idx} className="grid grid-cols-12 gap-x-4 text-sm">
+                  <span className="col-span-6 text-gray-700 truncate" title={item.description}>
+                    {item.description}
+                  </span>
+                  <span className="sm:col-span-2 text-gray-600 text-right sm:text-left">
+                    Qty: {item.quantity?.toFixed(2) || 'N/A'}
+                  </span>
+                  <span className={`sm:col-span-2 text-gray-800 text-right sm:text-left ${item.unit_price < 0 ? 'text-red-600' : ''}`}>
+                    @ ${item.unit_price !== undefined ? Math.abs(item.unit_price).toFixed(2) : 'N/A'}
+                  </span>
+                  <span className={`sm:col-span-3 text-gray-900 font-medium text-right ${item.total && item.total < 0 ? 'text-red-600' : ''}`}>
+                    Total: ${item.total !== undefined ? Math.abs(item.total).toFixed(2) : (item.quantity * item.unit_price) ? (item.quantity * item.unit_price).toFixed(2) : 'N/A'}
+                    {item.total && item.total < 0 ? ' (neg)' : ''}
+                  </span>
+                </div>
+              ))}
+              {(!contracts[contracts.length - 1].items || contracts[contracts.length - 1].items.length === 0) && (
+                <p className="text-sm text-gray-500">No items listed for this contract.</p>
+              )}
+            </div>
           </div>
         </div>
       )}

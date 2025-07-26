@@ -112,8 +112,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('access_token', response.access_token);
       localStorage.setItem('refresh_token', response.refresh_token);
       
-      // Clear backend data for fresh session before setting user
-      await clearUserBackendData();
+      // Don't clear backend data automatically - let user manage their data
+      // await clearUserBackendData();
       
       setUser(response.user);
     } catch (error) {
@@ -135,8 +135,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('access_token', response.access_token);
       localStorage.setItem('refresh_token', response.refresh_token);
       
-      // Clear backend data for fresh session before setting user
-      await clearUserBackendData();
+      // Don't clear backend data automatically - let user manage their data
+      // await clearUserBackendData();
       
       setUser(response.user);
     } catch (error) {

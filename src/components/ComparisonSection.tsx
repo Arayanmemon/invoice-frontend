@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { Check, X, AlertTriangle } from 'lucide-react'
+import { Check, X, AlertTriangle, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { api, Contract, InvoiceData, ComparisonResult, PriceComparisonDetail, Item as ContractItemBase, InvoiceItem as InvoiceItemBase } from '@/services/api'
 import { FileDiff } from 'lucide-react';
@@ -23,8 +23,47 @@ export function ComparisonSection({ allInvoices = [], contracts, onContractsChan
   const [comparisonResult, setComparisonResult] = useState<ComparisonResult | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [priceDetails, setPriceDetails] = useState<PriceComparisonDetail[]>([])
+  const [isClearingData, setIsClearingData] = useState(false)
+  const [showClearConfirmModal, setShowClearConfirmModal] = useState(false)
 
   console.log('ComparisonSection render. allInvoices:', allInvoices, 'selectedInvoiceId:', selectedInvoiceId, 'isLoading:', isLoading, 'contracts:', contracts, 'selectedContractId:', selectedContractId);
+
+  // Clear all data function
+  const handleClearAllData = async () => {
+    setIsClearingData(true);
+    try {
+      // Clear contracts
+      await api.contracts.clearAll();
+      console.log('Contracts cleared successfully');
+      
+      // Clear invoices  
+      await api.invoices.clearAll();
+      console.log('Invoices cleared successfully');
+      
+      // Reset local state
+      onContractsChange([]);
+      setSelectedContractId('');
+      setSelectedInvoiceId('');
+      setCurrentInvoiceData(null);
+      setComparisonResult(null);
+      setPriceDetails([]);
+      
+      // Refresh data
+      await onRefreshInvoices();
+      
+      toast.success('All data cleared successfully!');
+      
+      // Reload the page after a short delay to allow the toast to show
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (error) {
+      console.error('Error clearing data:', error);
+      toast.error('Failed to clear all data. Please try again.');
+      setIsClearingData(false);
+      setShowClearConfirmModal(false);
+    }
+  };
 
   // Effect to update currentInvoiceData when selectedInvoiceId or allInvoices changes
   useEffect(() => {
@@ -523,11 +562,28 @@ export function ComparisonSection({ allInvoices = [], contracts, onContractsChan
     // </div>
 
     <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100 space-y-6">
-  <div className="flex items-center space-x-3 mb-6">
-    <div className="bg-gradient-to-br from-green-100 to-emerald-100 p-3 rounded-xl">
-      <FileDiff className="w-6 h-6 text-green-600" />
+  <div className="flex items-center justify-between mb-6">
+    <div className="flex items-center space-x-3">
+      <div className="bg-gradient-to-br from-green-100 to-emerald-100 p-3 rounded-xl">
+        <FileDiff className="w-6 h-6 text-green-600" />
+      </div>
+      <h2 className="text-2xl font-bold text-gray-900">Document Comparison</h2>
     </div>
-    <h2 className="text-2xl font-bold text-gray-900">Document Comparison</h2>
+    
+    {/* Clear All Data Button */}
+    <button
+      onClick={() => setShowClearConfirmModal(true)}
+      disabled={isClearingData || (contracts.length === 0 && allInvoices.length === 0)}
+      className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-white font-medium transition-colors ${
+        isClearingData || (contracts.length === 0 && allInvoices.length === 0)
+          ? 'bg-gray-400 cursor-not-allowed'
+          : 'bg-red-600 hover:bg-red-700'
+      }`}
+      title="Clear all contracts and invoices"
+    >
+      <Trash2 className="w-4 h-4" />
+      <span>{isClearingData ? 'Clearing...' : 'Clear All Data'}</span>
+    </button>
   </div>
 
   {/* Contract Selector */}
@@ -785,6 +841,44 @@ export function ComparisonSection({ allInvoices = [], contracts, onContractsChan
           </div>
         </div>
       )}
+    </div>
+  )}
+
+  {/* Custom Clear Confirmation Modal */}
+  {showClearConfirmModal && (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
+        <div className="flex items-center space-x-3 mb-4">
+          <div className="bg-red-100 p-3 rounded-full">
+            <AlertTriangle className="w-6 h-6 text-red-600" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900">Clear All Data</h3>
+        </div>
+        
+        <p className="text-gray-600 mb-6">
+          Are you sure you want to clear all contracts and invoices? This action cannot be undone.
+        </p>
+        
+        <div className="flex items-center justify-end space-x-3">
+          <button
+            onClick={() => setShowClearConfirmModal(false)}
+            disabled={isClearingData}
+            className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleClearAllData}
+            disabled={isClearingData}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center space-x-2"
+          >
+            {isClearingData && (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            )}
+            <span>{isClearingData ? 'Clearing...' : 'Clear All Data'}</span>
+          </button>
+        </div>
+      </div>
     </div>
   )}
 </div>
