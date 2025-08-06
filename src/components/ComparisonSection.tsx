@@ -5,6 +5,7 @@ import { Check, X, AlertTriangle, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { api, Contract, InvoiceData, ComparisonResult, PriceComparisonDetail, Item as ContractItemBase, InvoiceItem as InvoiceItemBase } from '@/services/api'
 import { FileDiff } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext'
 // Patch types to include 'total'
 export type ContractItem = ContractItemBase & { total: number };
 export type InvoiceItem = InvoiceItemBase & { total: number };
@@ -17,6 +18,7 @@ interface ComparisonSectionProps {
 }
 
 export function ComparisonSection({ allInvoices = [], contracts, onContractsChange, onRefreshInvoices }: ComparisonSectionProps) {
+  const { user, isAuthenticated } = useAuth()
   const [selectedContractId, setSelectedContractId] = useState<string>('')
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>('')
   const [currentInvoiceData, setCurrentInvoiceData] = useState<InvoiceData | null>(null);
@@ -26,7 +28,25 @@ export function ComparisonSection({ allInvoices = [], contracts, onContractsChan
   const [isClearingData, setIsClearingData] = useState(false)
   const [showClearConfirmModal, setShowClearConfirmModal] = useState(false)
 
-  console.log('ComparisonSection render. allInvoices:', allInvoices, 'selectedInvoiceId:', selectedInvoiceId, 'isLoading:', isLoading, 'contracts:', contracts, 'selectedContractId:', selectedContractId);
+  // Clear comparison state when user changes or becomes unauthenticated
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      console.log('User authentication changed in ComparisonSection, clearing comparison state');
+      setSelectedContractId('');
+      setSelectedInvoiceId('');
+      setCurrentInvoiceData(null);
+      setComparisonResult(null);
+      setPriceDetails([]);
+      setShowClearConfirmModal(false);
+    }
+  }, [isAuthenticated, user])
+
+  console.log('🔍 ComparisonSection render:');
+  console.log('  - allInvoices:', allInvoices.length, 'invoices:', allInvoices);
+  console.log('  - contracts:', contracts.length, 'contracts:', contracts);
+  console.log('  - selectedInvoiceId:', selectedInvoiceId);
+  console.log('  - selectedContractId:', selectedContractId);
+  console.log('  - isLoading:', isLoading);
 
   // Clear all data function
   const handleClearAllData = async () => {

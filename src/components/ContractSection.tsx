@@ -6,15 +6,19 @@ import { Upload, Plus, X, Trash2, Edit2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { api, Contract, Item as ApiItemBase } from '@/services/api'
 import { FileText } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext'
 // Patch ApiItem type to include 'total'
 export type ApiItem = ApiItemBase & { total: number };
 
 interface ContractSectionProps {
   onContractCreated?: () => void;
+  contracts: Contract[]; // Receive contracts from Dashboard
+  onContractsChange: (contracts: Contract[]) => void; // Function to update Dashboard contracts
 }
 
-export function ContractSection({ onContractCreated }: ContractSectionProps) {
-  const [contracts, setContracts] = useState<Contract[]>([])
+export function ContractSection({ onContractCreated, contracts, onContractsChange }: ContractSectionProps) {
+  const { user, isAuthenticated } = useAuth()
+  // Remove local contracts state - use props from Dashboard
   const [isManualMode, setIsManualMode] = useState(false)
   const [newContract, setNewContract] = useState<{
     supplier_name: string;
@@ -26,21 +30,23 @@ export function ContractSection({ onContractCreated }: ContractSectionProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [editingContract, setEditingContract] = useState<Contract | null>(null)
+  const [currentContract, setCurrentContract] = useState<Contract | null>(null) // Track currently uploaded/created contract
 
-  // Load contracts on component mount
+  // Clear current contract when user changes or becomes unauthenticated
   useEffect(() => {
-    fetchContracts()
-  }, [])
-
-  const fetchContracts = async () => {
-    try {
-      const data = await api.contracts.getAll()
-      setContracts(data)
-    } catch (error) {
-      toast.error('Failed to load contracts')
-      console.error('Error loading contracts:', error)
+    if (!isAuthenticated || !user) {
+      console.log('User authentication changed in ContractSection, clearing current contract');
+      setCurrentContract(null);
+      setEditingContract(null);
+      setNewContract({
+        supplier_name: '',
+        items: []
+      });
+      setIsManualMode(false);
     }
-  }
+  }, [isAuthenticated, user])
+
+  // No need to load contracts here - Dashboard handles this
 
   const handleUpload = async (file: File) => {
     setIsLoading(true)
@@ -74,7 +80,8 @@ export function ContractSection({ onContractCreated }: ContractSectionProps) {
       formData.append('file_name', file.name);
       
       const data = await api.contracts.upload(formData)
-      setContracts((prevContracts) => [...prevContracts, data])
+      onContractsChange([...contracts, data]) // Update Dashboard contracts
+      setCurrentContract(data) // Set as current contract
       setNewContract({
         supplier_name: '',
         items: []
@@ -162,7 +169,8 @@ export function ContractSection({ onContractCreated }: ContractSectionProps) {
     
     try {
       const data = await api.contracts.create(newContract)
-      setContracts((prevContracts) => [...prevContracts, data])
+      onContractsChange([...contracts, data]) // Update Dashboard contracts
+      setCurrentContract(data) // Set as current contract
       setNewContract({
         supplier_name: '',
         items: []
@@ -186,7 +194,11 @@ export function ContractSection({ onContractCreated }: ContractSectionProps) {
 
     try {
       await api.contracts.delete(id);
-      setContracts(contracts.filter(contract => contract.id !== id));
+      onContractsChange(contracts.filter(contract => contract.id !== id)); // Update Dashboard contracts
+      // Clear current contract if it's the one being deleted
+      if (currentContract && currentContract.id === id) {
+        setCurrentContract(null);
+      }
       toast.success('Contract deleted successfully');
     } catch (error) {
       toast.error('Failed to delete contract');
@@ -210,9 +222,10 @@ export function ContractSection({ onContractCreated }: ContractSectionProps) {
     setIsLoading(true);
     try {
       const updatedContract = await api.contracts.update(editingContract.id, newContract);
-      setContracts(contracts.map(contract => 
+      onContractsChange(contracts.map(contract => 
         contract.id === editingContract.id ? updatedContract : contract
-      ));
+      )); // Update Dashboard contracts
+      setCurrentContract(updatedContract); // Set as current contract
       setEditingContract(null);
       setNewContract({
         supplier_name: '',
@@ -467,6 +480,7 @@ export function ContractSection({ onContractCreated }: ContractSectionProps) {
             setIsManualMode(false);
             setEditingContract(null);
             setNewContract({ supplier_name: '', items: [] });
+            setCurrentContract(null); // Clear current contract display
           }}
           className={`px-4 py-2 rounded-md transition-colors ${
             !isManualMode
@@ -481,6 +495,7 @@ export function ContractSection({ onContractCreated }: ContractSectionProps) {
             setIsManualMode(true);
             setEditingContract(null);
             setNewContract({ supplier_name: '', items: [] });
+            setCurrentContract(null); // Clear current contract display
           }}
           className={`px-4 py-2 rounded-md transition-colors ${
             isManualMode
@@ -611,30 +626,39 @@ export function ContractSection({ onContractCreated }: ContractSectionProps) {
         </form>
       )}
 
-      {/* Show details of the most recently created/uploaded contract */}
-      {contracts.length > 0 && (
+      {/* Show details of the currently uploaded/created contract */}
+      {currentContract && (
         <div className="mt-8">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Current Contract</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Current Contract</h3>
+            <button
+              onClick={() => setCurrentContract(null)}
+              className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+              title="Clear current display"
+            >
+              Clear Display
+            </button>
+          </div>
           <div className="border border-gray-200 rounded-md p-4">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h4 className="font-medium text-gray-900">
-                  {contracts[contracts.length - 1].supplier_name}
+                  {currentContract.supplier_name}
                 </h4>
                 <p className="text-sm text-gray-500">
-                  Created: {new Date(contracts[contracts.length - 1].created_at).toLocaleDateString()}
+                  Created: {new Date(currentContract.created_at).toLocaleDateString()}
                 </p>
               </div>
               <div className="flex space-x-2">
                 <button
-                  onClick={() => handleEdit(contracts[contracts.length - 1])}
+                  onClick={() => handleEdit(currentContract)}
                   className="text-gray-400 hover:text-indigo-600"
                   title="Edit contract"
                 >
                   <Edit2 className="h-5 w-5" />
                 </button>
                 <button
-                  onClick={() => handleDelete(contracts[contracts.length - 1].id)}
+                  onClick={() => handleDelete(currentContract.id)}
                   className="text-gray-400 hover:text-red-600"
                   title="Delete contract"
                 >
@@ -643,7 +667,7 @@ export function ContractSection({ onContractCreated }: ContractSectionProps) {
               </div>
             </div>
             <div className="space-y-2">
-              {contracts[contracts.length - 1].items && contracts[contracts.length - 1].items.map((item, idx) => (
+              {currentContract.items && currentContract.items.map((item, idx) => (
                 <div key={idx} className="grid grid-cols-12 gap-x-4 text-sm">
                   <span className="col-span-6 text-gray-700 truncate" title={item.description}>
                     {item.description}
@@ -660,7 +684,7 @@ export function ContractSection({ onContractCreated }: ContractSectionProps) {
                   </span>
                 </div>
               ))}
-              {(!contracts[contracts.length - 1].items || contracts[contracts.length - 1].items.length === 0) && (
+              {(!currentContract.items || currentContract.items.length === 0) && (
                 <p className="text-sm text-gray-500">No items listed for this contract.</p>
               )}
             </div>

@@ -5,6 +5,7 @@ import { useDropzone, DropzoneOptions } from 'react-dropzone'
 import { Upload, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { api, InvoiceData } from '@/services/api'
+import { useAuth } from '@/contexts/AuthContext'
 
 // Add InvoiceItem type override to include 'total'
 export interface InvoiceItem {
@@ -20,10 +21,19 @@ interface InvoiceSectionProps {
 }
 
 const InvoiceSection: React.FC<InvoiceSectionProps> = ({ onInvoiceProcessed, onRefreshInvoices }) => {
+  const { user, isAuthenticated } = useAuth()
   const [invoices, setInvoices] = useState<InvoiceData[]>([])
   const [processedInvoice, setProcessedInvoice] = useState<InvoiceData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
+  // Clear processed invoice when user changes or becomes unauthenticated
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      console.log('User authentication changed in InvoiceSection, clearing processed invoice');
+      setProcessedInvoice(null);
+    }
+  }, [isAuthenticated, user])
 
   useEffect(() => {
     fetchInvoices()
@@ -286,9 +296,18 @@ const InvoiceSection: React.FC<InvoiceSectionProps> = ({ onInvoiceProcessed, onR
 
     {processedInvoice && (
       <div className="mt-8">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">
-          Processed Invoice
-        </h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium text-gray-900">
+            Processed Invoice
+          </h3>
+          <button
+            onClick={() => setProcessedInvoice(null)}
+            className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+            title="Clear current display"
+          >
+            Clear Display
+          </button>
+        </div>
         <div className="border border-pink-100 bg-white rounded-md p-4 shadow-sm">
           <div className="flex justify-between items-start mb-4">
             <div>

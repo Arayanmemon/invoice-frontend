@@ -52,6 +52,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const fetchContracts = useCallback(async () => {
     try {
       const data = await api.contracts.getAll()
+      console.log('🔍 Dashboard: Fetched contracts from API:', data.length, 'contracts:', data)
       setContracts(data)
     } catch (error) {
       console.error('Error fetching contracts:', error)
@@ -61,6 +62,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const fetchInvoices = useCallback(async () => {
     try {
       const data = await api.invoices.getAll()
+      console.log('🔍 Dashboard: Fetched invoices from API:', data.length, 'invoices:', data)
       setAllInvoices(data)
     } catch (error) {
       console.error('Error fetching all invoices:', error)
@@ -241,7 +243,11 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Contract Section */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 hover:shadow-xl transition-all duration-300">
-            <ContractSection onContractCreated={handleContractCreated} />
+            <ContractSection 
+              onContractCreated={handleContractCreated} 
+              contracts={contracts}
+              onContractsChange={setContracts}
+            />
           </div>
 
           {/* Invoice Section */}
